@@ -1,19 +1,21 @@
-# WSL2 Ubuntu Setup & Configuration Tool
+# Ubuntu Dev Environment Setup Tool
 
-A comprehensive automation script for setting up WSL2 Ubuntu with development tools, databases, and services. This tool provides an interactive interface to install and configure your development environment with minimal effort.
+A comprehensive automation script for setting up Ubuntu with development tools, databases, and services. Works on both **WSL2** (Windows) and **Multipass** (macOS/Linux). This tool provides an interactive interface to install and configure your development environment with minimal effort.
 
 ## Table of Contents
 
-- [WSL2 Ubuntu Setup \& Configuration Tool](#wsl2-ubuntu-setup--configuration-tool)
+- [Ubuntu Dev Environment Setup Tool](#ubuntu-dev-environment-setup-tool)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Quick Start](#quick-start)
-  - [WSL Configuration](#wsl-configuration)
+  - [Environment Configuration](#environment-configuration)
+    - [WSL2 (Windows)](#wsl2-windows)
+    - [Multipass (macOS / Linux)](#multipass-macos--linux)
   - [Initial Ubuntu Setup](#initial-ubuntu-setup)
   - [Installation](#installation)
     - [Automated Installation (Recommended)](#automated-installation-recommended)
     - [Manual Installation (Alternative)](#manual-installation-alternative)
-    - [Reboot WSL](#reboot-wsl)
+    - [Reboot the Environment](#reboot-the-environment)
   - [Available Commands](#available-commands)
     - [Installing Software](#installing-software)
     - [Installing Services](#installing-services)
@@ -26,7 +28,7 @@ A comprehensive automation script for setting up WSL2 Ubuntu with development to
     - [uv Aliases (Optional)](#uv-aliases-optional)
   - [Additional Documentation](#additional-documentation)
   - [Important Notes](#important-notes)
-    - [WSL Reboot Procedure](#wsl-reboot-procedure)
+    - [Reboot Procedure](#reboot-procedure)
     - [Dialog UI Issues](#dialog-ui-issues)
     - [Software Requiring Reboot](#software-requiring-reboot)
     - [Service Configuration](#service-configuration)
@@ -54,15 +56,15 @@ cd WslConfig
 chmod u+x init.sh
 ./init.sh
 
-# 3. Reboot your WSL distro
-# In Windows PowerShell or Command Prompt:
-wsl -t <distro-name>
+# 3. Reboot your environment (see platform-specific instructions below)
 
 # 4. Start using the script with the 'system' alias
 system install
 ```
 
-## WSL Configuration
+## Environment Configuration
+
+### WSL2 (Windows)
 
 For optimal performance, configure WSL resource limits. Create or edit `%UserProfile%\.wslconfig` in Windows:
 
@@ -75,6 +77,24 @@ swapfile=C:\\Users\\{YourUsername}\\wsl-swap.vhdx
 ```
 
 **Note:** Adjust values based on your system resources.
+
+### Multipass (macOS / Linux)
+
+When launching a Multipass instance, allocate resources at creation time:
+
+```bash
+multipass launch --name dev --cpus 4 --memory 8G --disk 40G
+```
+
+To reconfigure an existing instance, stop it first and use `multipass set`:
+
+```bash
+multipass stop dev
+multipass set local.dev.cpus=4
+multipass set local.dev.memory=8G
+multipass set local.dev.disk=40G
+multipass start dev
+```
 
 ## Initial Ubuntu Setup
 
@@ -141,9 +161,11 @@ If you prefer manual installation:
    source ~/.bashrc
    ```
 
-### Reboot WSL
+### Reboot the Environment
 
-After installation, reboot your WSL distro from Windows:
+Some installations (Maven, nvm) require a full session restart. How to reboot depends on your platform.
+
+**WSL2** — run from Windows PowerShell or Command Prompt:
 
 ```powershell
 # List distros to find your distro name
@@ -153,7 +175,14 @@ wsl -l -v
 wsl -t <distro-name>
 ```
 
-**Important:** Close all WSL-related applications (terminal, VSCode, File Explorer) before rebooting.
+Close all WSL-related applications (terminal, VSCode, File Explorer) before rebooting.
+
+**Multipass** — run from your Mac/Linux terminal:
+
+```bash
+multipass stop dev
+multipass start dev
+```
 
 ## Available Commands
 
@@ -184,7 +213,7 @@ system install
 - TeX Live
 - shfmt (shell script formatter)
 
-**Note:** Some software (Maven, nvm/npm) requires a WSL reboot after installation.
+**Note:** Some software (Maven, nvm/npm) requires a session restart after installation.
 
 ### Installing Services
 
@@ -201,7 +230,7 @@ system install-services
 
 **Related Documentation:**
 
-- [Syncthing Setup Guide](syncthing_setup.md) - Complete setup for WSL→Windows synchronization
+- [Syncthing Setup Guide](syncthing_setup.md) - Setup guide for Syncthing synchronization (WSL-specific; Multipass users should adapt accordingly)
 - [Syncthing Backup](syncthing_backup/README.md) - Automatic backup configuration
 
 ### Configuring Software
@@ -218,7 +247,7 @@ system config
 2. **MySQL** - Run secure installation and set up root password
 3. **PostgreSQL** - Set up postgres user password
 4. **MariaDB** - Configure database access
-5. **Syncthing Auto-Export** - Set up automatic backups on WSL startup
+5. **Syncthing Auto-Export** - Set up automatic backups on shell startup
 
 **MySQL Configuration Guide:**
 After selecting MySQL configuration, you'll be guided through:
@@ -226,7 +255,7 @@ After selecting MySQL configuration, you'll be guided through:
 - VALIDATE PASSWORD setup (recommended: **no** for local development)
 - Root password creation
 - Remove Anonymous Users (recommended: **yes**)
-- Disallow remote login (recommended: **no** for WSL)
+- Disallow remote login (recommended: **no** for local development)
 - Remove test database (optional)
 - Reload privilege tables (recommended: **yes**)
 - Set root authentication string
@@ -312,30 +341,15 @@ This repository includes several guides for specific topics:
 
 - **[uv Cheat Sheet](uv_cheat_sheet.md)** - Quick reference guide for using the `uv` Python package manager, including installation, project management, virtual environments, and useful aliases.
 
-- **[Syncthing Setup](syncthing_setup.md)** - Comprehensive guide for setting up Syncthing to synchronize code projects from WSL to Windows. Includes configuration for optimal performance with many small files.
+- **[Syncthing Setup](syncthing_setup.md)** - Guide for setting up Syncthing synchronization (written for WSL→Windows; Multipass users should adapt the host-side steps). Includes configuration for optimal performance with many small files.
 
-- **[Syncthing Backup](syncthing_backup/README.md)** - Automatic backup system for Syncthing configuration on WSL startup. Ensures your Syncthing setup can be easily restored or migrated.
+- **[Syncthing Backup](syncthing_backup/README.md)** - Automatic backup system for Syncthing configuration on startup. Ensures your Syncthing setup can be easily restored or migrated.
 
 ## Important Notes
 
-### WSL Reboot Procedure
+### Reboot Procedure
 
-Some installations require a WSL reboot. **Always follow this procedure:**
-
-1. Close all WSL-related applications:
-   - Terminal windows
-   - VSCode
-   - Windows Explorer (if browsing WSL files)
-
-2. Open Windows PowerShell or Command Prompt
-
-3. Terminate the distro:
-
-   ```powershell
-   wsl -t <distro-name>
-   ```
-
-4. Restart your WSL environment
+Some installations require a full session restart. See the [Reboot the Environment](#reboot-the-environment) section for platform-specific instructions.
 
 ### Dialog UI Issues
 
@@ -343,7 +357,7 @@ The interactive selection dialogs may have display issues in full-screen mode. I
 
 ### Software Requiring Reboot
 
-These packages require a WSL reboot after installation:
+These packages require a session restart after installation:
 
 - Maven
 - Node Version Manager (nvm/npm)

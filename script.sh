@@ -20,7 +20,7 @@
     https://stackoverflow.com/questions/36433835/getting-cassandra-to-use-an-alternate-java-install
 '
 
-SCRIPT_VERSION="v1.1.1"
+SCRIPT_VERSION="v2.0.0"
 GITHUB_REPO="zepedrocosta/WslConfig"
 
 RED="\033[0;31m"
@@ -38,6 +38,7 @@ STOP=" is now stopped."
 NOP=" is not installed."
 
 me=$USER
+ARCH=$(dpkg --print-architecture)
 
 update() {
     info "Updating Ubuntu..."
@@ -122,7 +123,7 @@ case $1 in
                     update && timer "$CONT" "$INST Java 17"
                     sudo apt-get install openjdk-17-jdk -y
                     echo >>~/.bashrc
-                    echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >>~/.bashrc
+                    echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${ARCH}" >>~/.bashrc
                     success "Java 17 installed successfully!"
                     ;;
                 2)
@@ -134,7 +135,7 @@ case $1 in
                     update && timer "$CONT" "$INST Java 21"
                     sudo apt-get install openjdk-21-jdk -y
                     echo >>~/.bashrc
-                    echo 'export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64' >>~/.bashrc
+                    echo "export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-${ARCH}" >>~/.bashrc
                     success "Java 21 installed successfully!"
                     ;;
                 4)
@@ -308,7 +309,7 @@ case $1 in
                     sudo sh -c 'echo "deb http://www.apache.org/dist/cassandra/debian 311x main" > /etc/apt/sources.list.d/cassandra.list'
                     sudo apt update
                     sudo apt install cassandra -y
-                    echo 'JAVA_HOME=usr/lib/jvm/java-8-openjdk-amd64' >>~/usr/share/cassandra/cassandra.in.sh
+                    echo "JAVA_HOME=usr/lib/jvm/java-8-openjdk-${ARCH}" >>~/usr/share/cassandra/cassandra.in.sh
                     success "Apache Cassandra installed successfully!"
                     ;;
                 5)
@@ -391,10 +392,10 @@ case $1 in
         cmd=(dialog --separate-output --checklist "Please Select Software you want to configure:" 22 76 16)
         options=(
             1 "Install latest stable npm with nvm" off
-            2 "Configure MySQL for WSL" off
-            3 "Configure PostgresSQL for WSL" off
-            4 "Configure MariaDB for WSL" off
-            5 "Setup Syncthing Auto-Export on WSL Startup" off
+            2 "Configure MySQL" off
+            3 "Configure PostgresSQL" off
+            4 "Configure MariaDB" off
+            5 "Setup Syncthing Auto-Export on Startup" off
         )
         choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
         for choice in $choices; do
@@ -453,8 +454,8 @@ case $1 in
                         success "Syncthing auto-export setup completed!"
                         info "Backup script: $EXPORT_SCRIPT"
                         info "Backups location: $HOME/syncthing-backups"
-                        info "The script will run automatically on WSL startup"
-                        warn "Run 'source ~/.bashrc' or restart WSL to activate"
+                        info "The script will run automatically on shell startup"
+                        warn "Run 'source ~/.bashrc' or restart your session to activate"
                     else
                         warn "Syncthing auto-export already configured in .bashrc"
                         info "Using script at: $EXPORT_SCRIPT"
@@ -617,7 +618,7 @@ case $1 in
         fi
         ;;
     script-version)
-        info "WSL Config Script - Version: ${SCRIPT_VERSION}"
+        info "Ubuntu Setup Script - Version: ${SCRIPT_VERSION}"
         info "Checking for updates..."
         latest=$(curl -sf "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
         if [ -z "$latest" ]; then
