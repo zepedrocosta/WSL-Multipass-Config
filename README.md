@@ -1,6 +1,6 @@
 # Ubuntu Dev Environment Setup Tool
 
-A comprehensive automation script for setting up Ubuntu with development tools, databases, and services. Works on both **WSL2** (Windows) and **Multipass** (macOS/Linux). This tool provides an interactive interface to install and configure your development environment with minimal effort.
+A comprehensive automation script for setting up Ubuntu with development tools, databases, and services. Works on both **WSL2** (Windows) and **OrbStack** (macOS). This tool provides an interactive interface to install and configure your development environment with minimal effort.
 
 ## Table of Contents
 
@@ -10,7 +10,7 @@ A comprehensive automation script for setting up Ubuntu with development tools, 
   - [Quick Start](#quick-start)
   - [Environment Configuration](#environment-configuration)
     - [WSL2 (Windows)](#wsl2-windows)
-    - [Multipass (macOS / Linux)](#multipass-macos--linux)
+    - [OrbStack (macOS)](#orbstack-macos)
   - [Initial Ubuntu Setup](#initial-ubuntu-setup)
   - [Installation](#installation)
     - [Automated Installation (Recommended)](#automated-installation-recommended)
@@ -78,23 +78,23 @@ swapfile=C:\\Users\\{YourUsername}\\wsl-swap.vhdx
 
 **Note:** Adjust values based on your system resources.
 
-### Multipass (macOS / Linux)
+### OrbStack (macOS)
 
-When launching a Multipass instance, allocate resources at creation time:
-
-```bash
-multipass launch --name dev --cpus 4 --memory 8G --disk 40G
-```
-
-To reconfigure an existing instance, stop it first and use `multipass set`:
+OrbStack creates Ubuntu machines with minimal footprint. Before cloning this repository, install `git` since it is not included in the default Ubuntu image:
 
 ```bash
-multipass stop dev
-multipass set local.dev.cpus=4
-multipass set local.dev.memory=8G
-multipass set local.dev.disk=40G
-multipass start dev
+sudo apt-get update && sudo apt-get install -y git
 ```
+
+Then clone and run the script as usual.
+
+When creating a new OrbStack Linux machine, allocate resources from the OrbStack app (Settings → Resources) or via the CLI:
+
+```bash
+orb create ubuntu:noble dev
+```
+
+To reconfigure CPU/memory limits for an existing machine, adjust them in **OrbStack → Machines → [machine name] → Settings**.
 
 ## Initial Ubuntu Setup
 
@@ -177,12 +177,14 @@ wsl -t <distro-name>
 
 Close all WSL-related applications (terminal, VSCode, File Explorer) before rebooting.
 
-**Multipass** — run from your Mac/Linux terminal:
+**OrbStack** — run from your Mac terminal or the OrbStack app:
 
 ```bash
-multipass stop dev
-multipass start dev
+orb stop dev
+orb start dev
 ```
+
+Alternatively, use the OrbStack menu bar icon to restart the machine.
 
 ## Available Commands
 
@@ -341,7 +343,7 @@ This repository includes several guides for specific topics:
 
 - **[uv Cheat Sheet](uv_cheat_sheet.md)** - Quick reference guide for using the `uv` Python package manager, including installation, project management, virtual environments, and useful aliases.
 
-- **[Syncthing Setup](syncthing_setup.md)** - Guide for setting up Syncthing synchronization (written for WSL→Windows; Multipass users should adapt the host-side steps). Includes configuration for optimal performance with many small files.
+- **[Syncthing Setup](syncthing_setup.md)** - Guide for setting up Syncthing synchronization (written for WSL→Windows; OrbStack users should adapt the host-side steps). Includes configuration for optimal performance with many small files.
 
 - **[Syncthing Backup](syncthing_backup/README.md)** - Automatic backup system for Syncthing configuration on startup. Ensures your Syncthing setup can be easily restored or migrated.
 
