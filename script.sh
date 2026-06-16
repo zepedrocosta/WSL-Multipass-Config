@@ -21,7 +21,7 @@
 '
 
 SCRIPT_VERSION="v2.0.0"
-GITHUB_REPO="zepedrocosta/WslConfig"
+GITHUB_REPO="zepedrocosta/WSL-Orbstack-Config"
 
 RED="\033[0;31m"
 YELLOW="\033[1;33m"
@@ -98,7 +98,7 @@ case $1 in
     install)
         update
         if missing "dialog"; then
-            info "Installing Dialog" && sudo -i apt install dialog >/dev/null 2>&1
+            info "Installing Dialog" && sudo -i apt install dialog
         fi
         cmd=(dialog --separate-output --checklist "Please Select Software you want to install:" 22 76 16)
         options=(
@@ -148,7 +148,7 @@ case $1 in
                     sudo apt install maven
                     success "Maven installed successfully!"
                     ;;
-                4)
+                6)
                     update && timer "$CONT" "$INST Node Version Manager (nvm)"
                     sudo apt-get install curl
                     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
@@ -247,9 +247,9 @@ case $1 in
                     SHFMT_VERSION=$(curl -s https://api.github.com/repos/mvdan/sh/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
                     ARCH=$(dpkg --print-architecture)
                     if [ "$ARCH" = "amd64" ]; then
-                        wget -q https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64 -O /tmp/shfmt
+                        wget https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64 -O /tmp/shfmt
                     elif [ "$ARCH" = "arm64" ]; then
-                        wget -q https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_arm64 -O /tmp/shfmt
+                        wget https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_arm64 -O /tmp/shfmt
                     else
                         error "Unsupported architecture: $ARCH"
                         exit 1
@@ -266,7 +266,7 @@ case $1 in
     install-services)
         update
         if missing "dialog"; then
-            info "Installing Dialog" && sudo -i apt install dialog >/dev/null 2>&1
+            info "Installing Dialog" && sudo -i apt install dialog
         fi
         cmd=(dialog --separate-output --checklist "Please Select Services you want to install:" 22 76 16)
         options=(
@@ -279,8 +279,7 @@ case $1 in
             7 "Neo4j" off
             8 "Syncthing" off
             9 "GitHub CLI" off
-            10 "Firefox" off
-            11 "Claude Code" off
+            10 "Claude Code" off
         )
         choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
         clear
@@ -303,19 +302,18 @@ case $1 in
                     ;;
                 4)
                     update && timer "$CONT" "$INST Apache Cassandra"
-                    sudo apt install openjdk-8-jre
                     sudo apt install apt-transport-https gnupg2 -y
-                    sudo wget -q -O - https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -
-                    sudo sh -c 'echo "deb http://www.apache.org/dist/cassandra/debian 311x main" > /etc/apt/sources.list.d/cassandra.list'
-                    sudo apt update
-                    sudo apt install cassandra -y
-                    echo "JAVA_HOME=usr/lib/jvm/java-8-openjdk-${ARCH}" >>~/usr/share/cassandra/cassandra.in.sh
+                    wget -q -O - https://downloads.apache.org/cassandra/KEYS | sudo gpg --dearmor -o /usr/share/keyrings/cassandra-archive-keyring.gpg
+                    echo "deb [signed-by=/usr/share/keyrings/cassandra-archive-keyring.gpg] https://debian.cassandra.apache.org 40x main" | sudo tee /etc/apt/sources.list.d/cassandra.list
+                    sudo apt-get update
+                    sudo apt-get install cassandra -y
                     success "Apache Cassandra installed successfully!"
                     ;;
                 5)
                     update && timer "$CONT" "$INST MongoDB"
-                    wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
-                    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+                    UBUNTU_CODENAME=$(lsb_release -cs)
+                    curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+                    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu ${UBUNTU_CODENAME}/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
                     sudo apt-get update && sudo apt-get install mongodb-org -y && mkdir -p ~/data/db
                     curl https://raw.githubusercontent.com/mongodb/mongo/master/debian/init.d | sudo tee /etc/init.d/mongodb >/dev/null
                     sudo chmod +x /etc/init.d/mongodb
@@ -347,7 +345,7 @@ case $1 in
                     for choice in $choices; do
                         case "${choice}" in
                             1)
-                                syncthing -generate >/dev/null 2>&1
+                                syncthing -generate
                                 systemctl --user enable syncthing
                                 systemctl --user start syncthing
                                 success "Syncthing enabled and started!"
@@ -366,15 +364,8 @@ case $1 in
                     sudo apt install gh -y
                     success "GitHub CLI installed successfully!"
                     ;;
-                # Firefox
-                10)
-                    update && timer "$CONT" "$INST Firefox"
-                    sudo add-apt-repository ppa:mozillateam/ppa
-                    sudo apt install firefox
-                    success "Firefox installed successfully!"
-                    ;;
                 # Claude Code
-                11)
+                10)
                     update && timer "$CONT" "$INST Claude Code"
                     sudo apt-get install curl
                     curl -fsSL https://claude.ai/install.sh | bash
@@ -387,7 +378,7 @@ case $1 in
     config)
         update
         if missing "dialog"; then
-            info "Installing Dialog" && sudo -i apt install dialog >/dev/null 2>&1
+            info "Installing Dialog" && sudo -i apt install dialog
         fi
         cmd=(dialog --separate-output --checklist "Please Select Software you want to configure:" 22 76 16)
         options=(
@@ -494,7 +485,7 @@ case $1 in
             exit 1
         fi
         if missing "dialog"; then
-            info "Installing Dialog" && sudo -i apt install dialog >/dev/null 2>&1
+            info "Installing Dialog" && sudo -i apt install dialog
         fi
         cmd=(dialog --radiolist "Please select which LaTeX package you want to install" 22 76 16)
         options=(
