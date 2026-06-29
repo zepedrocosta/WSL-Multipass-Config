@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A Bash-based automation tool for setting up and managing WSL2 Ubuntu development environments. It provides an interactive CLI (using `dialog`) for installing dev tools, databases, and services.
+A Bash-based automation tool for setting up and managing Ubuntu development environments on **WSL2** (Windows) and **Multipass** (macOS/Linux). It provides an interactive CLI (using `dialog`) for installing dev tools, databases, and services.
 
 **Installation:**
 
@@ -13,7 +13,10 @@ chmod u+x init.sh
 ./init.sh        # Installs to ~/.script/ and adds 'system' alias to shell config
 ```
 
-After installation, WSL must be rebooted (`wsl -t <distro-name>` from PowerShell).
+After installation, restart the environment:
+
+- **WSL2**: `wsl -t <distro-name>` from PowerShell
+- **Multipass**: `multipass stop <instance> && multipass start <instance>`
 
 ## Main Commands
 
@@ -49,7 +52,7 @@ Single-file Bash script (~620 lines) organized as:
 
 ### `syncthing_backup/script.sh`
 
-Standalone backup script run at WSL startup. Creates timestamped tar.gz backups of Syncthing config in `~/syncthing-backups/`, retaining the 10 most recent. Deduplicates by checking if a backup already exists for today's date.
+Standalone backup script run at shell startup. Creates timestamped tar.gz backups of Syncthing config in `~/syncthing-backups/`, retaining the 10 most recent. Deduplicates by checking if a backup already exists for today's date.
 
 ## Key Patterns
 
@@ -58,10 +61,10 @@ Standalone backup script run at WSL startup. Creates timestamped tar.gz backups 
 - All installs go through `apt-get` (non-interactive mode)
 - `dialog --checklist` for multi-select, `dialog --radiolist` for single-select; result captured via stderr redirect
 - Java 17/21 installs use `openjdk-17-jdk`/`openjdk-21-jdk` and `openjdk-17-source`/`openjdk-21-source`
-- Services that need WSL-compatible startup use `/etc/init.d/` or `service` rather than `systemctl`
+- Services use `/etc/init.d/` or `service` rather than `systemctl` (compatible with both WSL2 and Multipass where systemd may not be the default)
 
 ## Important Notes
 
-- Some installs (Maven, nvm/npm) require a WSL reboot to take effect
+- Some installs (Maven, nvm/npm) require a session restart to take effect
 - The `dialog` UI can appear corrupted in full-screen mode — resize the terminal window to fix
 - `system config` MySQL setup walks through `mysql_secure_installation`; for local dev, VALIDATE PASSWORD is recommended **no**
