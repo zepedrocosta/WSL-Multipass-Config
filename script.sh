@@ -109,8 +109,11 @@ run() {
 case $1 in
 install)
 	update
-	if missing "dialog"; then
-		info "Installing Dialog" && sudo -i apt install dialog
+	if ! command -v dialog &>/dev/null; then
+		info "Installing dialog..." && sudo apt-get install -y dialog || {
+			error "Failed to install dialog."
+			exit 1
+		}
 	fi
 	cmd=(dialog --separate-output --checklist "Please Select Software you want to install:" 22 76 16)
 	options=(
@@ -195,56 +198,36 @@ install)
 			fi
 			uv self update
 			success "uv installed successfully!"
-			cmd=(dialog --radiolist "Do you want to add the aliases? (Check uv_cheat_sheet.md)" 22 76 16)
-			options=(
-				1 "Yes" off
-				2 "No" off
-			)
-			choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
-			for choice in $choices; do
-				case "${choice}" in
-				1)
-					SHELL_RC="$HOME/.bashrc"
-					[ -n "$ZSH_VERSION" ] && SHELL_RC="$HOME/.zshrc"
+			read -rp "Do you want to add the aliases? (Check uv_cheat_sheet.md) [y/N] " _uv_alias_ans
+			if [[ "$_uv_alias_ans" =~ ^[yY] ]]; then
+				SHELL_RC="$HOME/.bashrc"
+				[ -n "$ZSH_VERSION" ] && SHELL_RC="$HOME/.zshrc"
 
-					# Only add aliases if not already present
-					if ! grep -q "alias uvp=" "$SHELL_RC"; then
-						{
-							echo 'alias uvp="uv run python"   # run Python directly'
-							echo 'alias uvr="uv run"         # run a command in venv'
-							echo 'alias uva="uv add"         # add dependency'
-							echo 'alias uvrm="uv remove"     # remove dependency'
-							echo 'alias uvs="uv sync"        # install/update deps'
-							echo 'alias uvpl="uv pip list"   # list packages'
-							echo 'alias uvl="uv lock"        # generate lockfile'
-							echo 'alias uvpy="uv python list"'
-						} >>"$SHELL_RC"
+				# Only add aliases if not already present
+				if ! grep -q "alias uvp=" "$SHELL_RC"; then
+					{
+						echo 'alias uvp="uv run python"   # run Python directly'
+						echo 'alias uvr="uv run"         # run a command in venv'
+						echo 'alias uva="uv add"         # add dependency'
+						echo 'alias uvrm="uv remove"     # remove dependency'
+						echo 'alias uvs="uv sync"        # install/update deps'
+						echo 'alias uvpl="uv pip list"   # list packages'
+						echo 'alias uvl="uv lock"        # generate lockfile'
+						echo 'alias uvpy="uv python list"'
+					} >>"$SHELL_RC"
 
-						echo "Aliases added to $SHELL_RC"
-						echo "Run 'source $SHELL_RC' or restart your shell to use them."
-					else
-						echo "Aliases already exist in $SHELL_RC, skipping."
-					fi
-					;;
-				2) ;;
-				esac
-			done
-			cmd=(dialog --radiolist "Do you want to install black (Python formatter)?" 22 76 16)
-			options=(
-				1 "Yes" off
-				2 "No" off
-			)
-			choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
-			for choice in $choices; do
-				case "${choice}" in
-				1)
-					uv tool install black
-					uv tool update-shell
-					success "Black installed successfully!"
-					;;
-				2) ;;
-				esac
-			done
+					echo "Aliases added to $SHELL_RC"
+					echo "Run 'source $SHELL_RC' or restart your shell to use them."
+				else
+					echo "Aliases already exist in $SHELL_RC, skipping."
+				fi
+			fi
+			read -rp "Do you want to install black (Python formatter)? [y/N] " _black_ans
+			if [[ "$_black_ans" =~ ^[yY] ]]; then
+				uv tool install black
+				uv tool update-shell
+				success "Black installed successfully!"
+			fi
 
 			;;
 		# TeX Live
@@ -284,8 +267,11 @@ install)
 	;;
 install-services)
 	update
-	if missing "dialog"; then
-		info "Installing Dialog" && sudo -i apt install dialog
+	if ! command -v dialog &>/dev/null; then
+		info "Installing dialog..." && sudo apt-get install -y dialog || {
+			error "Failed to install dialog."
+			exit 1
+		}
 	fi
 	cmd=(dialog --separate-output --checklist "Please Select Services you want to install:" 22 76 16)
 	options=(
@@ -355,25 +341,15 @@ install-services)
 			update && timer "$CONT" "$INST Syncthing"
 			sudo apt install syncthing -y
 			success "Syncthing installed successfully!"
-			cmd=(dialog --radiolist "Do you want to enable Syncthing to start automatically?" 22 76 16)
-			options=(
-				1 "Yes" off
-				2 "No" off
-			)
-			choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
-			for choice in $choices; do
-				case "${choice}" in
-				1)
-					syncthing -generate
-					systemctl --user enable syncthing
-					systemctl --user start syncthing
-					success "Syncthing enabled and started!"
-					;;
-				2)
-					info "Syncthing not enabled. Run 'systemctl --user enable syncthing' to enable it later."
-					;;
-				esac
-			done
+			read -rp "Do you want to enable Syncthing to start automatically? [y/N] " _sync_ans
+			if [[ "$_sync_ans" =~ ^[yY] ]]; then
+				syncthing -generate
+				systemctl --user enable syncthing
+				systemctl --user start syncthing
+				success "Syncthing enabled and started!"
+			else
+				info "Syncthing not enabled. Run 'systemctl --user enable syncthing' to enable it later."
+			fi
 			info "Access GUI at http://localhost:8384"
 			warn "Check syncthing_setup.md for configuration details"
 			;;
@@ -396,8 +372,11 @@ install-services)
 	;;
 config)
 	update
-	if missing "dialog"; then
-		info "Installing Dialog" && sudo -i apt install dialog
+	if ! command -v dialog &>/dev/null; then
+		info "Installing dialog..." && sudo apt-get install -y dialog || {
+			error "Failed to install dialog."
+			exit 1
+		}
 	fi
 	cmd=(dialog --separate-output --checklist "Please Select Software you want to configure:" 22 76 16)
 	options=(
@@ -503,8 +482,11 @@ latex-deps)
 		error "TeX Live is not installed. Please install TeX Live first."
 		exit 1
 	fi
-	if missing "dialog"; then
-		info "Installing Dialog" && sudo -i apt install dialog
+	if ! command -v dialog &>/dev/null; then
+		info "Installing dialog..." && sudo apt-get install -y dialog || {
+			error "Failed to install dialog."
+			exit 1
+		}
 	fi
 	cmd=(dialog --radiolist "Please select which LaTeX package you want to install" 22 76 16)
 	options=(
@@ -530,8 +512,11 @@ latex-deps)
 	success "LaTeX dependencies installed successfully!"
 	;;
 java-switcher)
-	if missing "dialog"; then
-		info "Installing Dialog" && sudo -i apt install dialog >/dev/null 2>&1
+	if ! command -v dialog &>/dev/null; then
+		info "Installing dialog..." && sudo apt-get install -y dialog || {
+			error "Failed to install dialog."
+			exit 1
+		}
 	fi
 
 	info "Detecting installed Java versions..."
@@ -628,30 +613,18 @@ clean-zone)
 	fi
 	;;
 connect-docker)
-	exec 3>&1
-	choice=$(dialog --radiolist "This is an operation only recommended for OrbStack. This will install docker.io and docker-compose-v2, and configure DOCKER_HOST in ~/.bashrc. Proceed?" 22 76 16 \
-		1 "Yes" off \
-		2 "No" off \
-		2>&1 1>&3)
-	exec 3>&-
-	clear
+	warn "This is an operation only recommended for OrbStack."
+	warn "This will link the macOS 'docker' command into this VM and add $USER to the orbstack group."
+	read -rp "Proceed? [y/N] " _docker_ans
 
-	case "$choice" in
-	1)
-		sudo apt install -y docker.io docker-compose-v2
-		sudo usermod -aG docker $USER
-		grep -qxF 'alias docker-compose="docker compose"' ~/.bashrc ||
-			echo 'alias docker-compose="docker compose"' >>~/.bashrc
-		success "Docker installed. Alias docker-compose added to ~/.bashrc."
-		success "Reboot the VM."
-		;;
-	2)
+	if [[ "$_docker_ans" =~ ^[yY] ]]; then
+		sudo mac link docker
+		sudo usermod -aG orbstack $USER
+		success "Docker linked to OrbStack's engine."
+		success "Log out and back into the VM shell for the group change to take effect."
+	else
 		info "Operation cancelled. Docker not configured."
-		;;
-	*)
-		info "Operation cancelled."
-		;;
-	esac
+	fi
 	;;
 script-version)
 	info "Ubuntu Setup Script - Version: ${SCRIPT_VERSION}"
