@@ -75,7 +75,7 @@ help() {
 	echo -e "  ${YELLOW}latex-deps${NONE}        Install LaTeX packages (base / extra / full)"
 	echo -e "  ${YELLOW}java-switcher${NONE}     Interactively switch Java version and update JAVA_HOME"
 	echo -e "  ${YELLOW}clean-zone${NONE}        Remove Zone.Identifier files recursively in a given directory (WSL command)"
-	echo -e "  ${YELLOW}connect-docker${NONE}    Connect to the docker socket on host. This uses the Docker Desktop default socket."
+	echo -e "  ${YELLOW}connect-docker${NONE}    Connect to the docker socket on host. This assumes you are using OrbStack and want to use the host's docker engine."
 	echo -e "  ${YELLOW}script-version${NONE}    Print current version and check GitHub for newer releases"
 	echo -e "  ${YELLOW}help${NONE}              Show this help message"
 }
